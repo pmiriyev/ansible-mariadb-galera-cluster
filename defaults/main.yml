@@ -1,6 +1,6 @@
 ---
 # defaults file for ansible-mariadb-galera-cluster
-
+### preferred OS Ubuntu
 # MariaDB setting
 
 # Define mariadb version
@@ -31,8 +31,8 @@ galera_allow_root_from_any: false
 mariadb_mysql_port: 3306
 
 # Define mysql root password
-# generate using echo password | mkpasswd -s -m sha-512
-mariadb_mysql_root_password: "root"
+# generate using echo password | apt install whois -y | mkpasswd -s -m sha-512
+mariadb_mysql_root_password: "{{ lookup('bitwarden.secrets.lookup', 'cac6fbba-28eb-45fd-bfc0-b25a00f18c57') }}"
 
 # Define mysql mem multiplier (used to calculate key_buffer_size)
 mariadb_mysql_mem_multiplier: .25
@@ -118,7 +118,7 @@ galera_wsrep_node_address_port: 4567
 galera_wsrep_slave_threads: 1
 
 # Define the name of the cluster
-galera_cluster_name: "vagrant-test"
+galera_cluster_name: "galera-cluster"
 
 # Define Ansible group in which the nodes exist to be part of the cluster
 galera_cluster_nodes_group: "galera-cluster-nodes"
@@ -259,10 +259,13 @@ mariadb_real_cpus: "{{ ansible_processor_count * ansible_processor_cores }}"
 #   - name: keystone
 #   - name: mydb
 #     init_script: files/init_mydb.sql
-mariadb_databases: []
+# mariadb_databases: []
+mariadb_databases:
+  - name: keystone
+  - name: mydb
 
 # Define additional MySQL users
-mariadb_mysql_users: []
+# mariadb_mysql_users: []
 #   - name: example
 #     hosts:
 #       - "%"
@@ -274,10 +277,33 @@ mariadb_mysql_users: []
 #     priv: *.*:USAGE (default}
 #     state: present (default)
 #     append_privs: no (default)
+mariadb_mysql_users:
+  - name: keystone
+    hosts:
+      - "%"
+      - "127.0.0.1"
+      - "::1"
+      - "localhost"
+    password: "{{ lookup('bitwarden.secrets.lookup', 'bd866d68-15b5-40bd-98d9-b25a00fb9d45') }}"
+    encrypted: no
+    priv: keystone.*:ALL
+    state: present
+    append_privs: no
+  - name: myuser
+    hosts:
+      - "%"
+      - "127.0.0.1"
+      - "::1"
+      - "localhost"
+    password: "{{ lookup('bitwarden.secrets.lookup', '6770396f-e9d0-4897-93b3-b25a00fbcddc') }}"
+    encrypted: no
+    priv: mydb.*:ALL
+    state: present
+    append_privs: no
 
 # Monitoring settings
 
-# Defines if galera monitoring script should be installes
+# Defines if galera monitoring script should be installed
 galera_enable_galera_monitoring_script: false
 
 # Define galera monitoring script path & name
