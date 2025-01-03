@@ -7,3 +7,6 @@ galera_cluster_nodes: "\
   {{   _galera_cluster_nodes.append( host )|default('', True) }}\
   {% endfor %}\
   {{ _galera_cluster_nodes }}"
+
+pmm_server: 192.168.0.67
+pmm_admin_password: "{{ lookup('bitwarden.secrets.lookup', '1b896ee5-73f0-48be-ba2d-b247007349d5') }}"

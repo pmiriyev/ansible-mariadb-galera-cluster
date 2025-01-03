@@ -21,6 +21,9 @@
     - install
   when: ansible_os_family == "Debian"
 
+- ansible.builtin.import_tasks: hosts-pmm-cfg.yml
+  when: ansible_os_family == "Debian"
+
 - ansible.builtin.import_tasks: redhat.yml
   tags:
     - install

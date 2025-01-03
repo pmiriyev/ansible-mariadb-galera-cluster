@@ -300,6 +300,19 @@ mariadb_mysql_users:
     priv: mydb.*:ALL
     state: present
     append_privs: no
+  - name: pmm
+    hosts:
+      - "%"
+      - "127.0.0.1"
+      - "::1"
+      - "localhost"
+    password: "{{ lookup('bitwarden.secrets.lookup', '88f82fa6-890c-4d72-99af-b247007323c2') }}"
+    encrypted: no
+    priv: "*.*:SELECT,PROCESS,REPLICA MONITOR,RELOAD"
+    state: present
+    append_privs: no
+    resource_limits:
+      MAX_USER_CONNECTIONS: 10
 
 # Monitoring settings
 

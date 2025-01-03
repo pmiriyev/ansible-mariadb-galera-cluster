@@ -1,0 +1,108 @@
+- name: Determine OS family
+  ansible.builtin.set_fact:
+    hosts_template_file: >
+      {%- if ansible_os_family == 'Debian' -%}
+        /etc/cloud/templates/hosts.debian.tmpl
+      {%- elif ansible_os_family == 'RedHat' -%}
+        /etc/cloud/templates/hosts.redhat.tmpl
+      {%- elif ansible_os_family == 'Suse' -%}
+        /etc/cloud/templates/hosts.suse.tmpl
+      {%- elif ansible_os_family == 'Alpine' -%}
+        /etc/cloud/templates/hosts.alpine.tmpl
+      {%- elif ansible_os_family == 'FreeBSD' -%}
+        /etc/cloud/templates/hosts.freebsd.tmpl
+      {%- elif ansible_os_family == 'Gentoo' -%}
+        /etc/cloud/templates/hosts.gentoo.tmpl
+      {%- elif ansible_os_family == 'Photon' -%}
+        /etc/cloud/templates/hosts.photon.tmpl
+      {%- elif ansible_os_family == 'Archlinux' -%}
+        /etc/cloud/templates/hosts.arch.tmpl
+      {%- elif ansible_os_family == 'Mariner' -%}
+        /etc/cloud/templates/hosts.mariner.tmpl
+      {%- else -%}
+        /etc/cloud/templates/hosts.debian.tmpl
+      {%- endif -%}
+
+# - name: Add IPv4 hosts to /etc/hosts
+#   ansible.builtin.lineinfile:
+#     path: /etc/hosts
+#     line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_facts['hostname'] }}"
+#     state: present
+#   loop: "{{ groups['galera-cluster-nodes'] }}"
+#   when:
+#     - hostvars[item].ansible_default_ipv4.address is defined
+#     - hostvars[item].ansible_facts['hostname'] is defined
+
+# - name: Add IPv4 hosts to "{{ hosts_template_file | trim }}"
+#   ansible.builtin.lineinfile:
+#     path: "{{ hosts_template_file | trim }}"
+#     line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_facts['hostname'] }}"
+#     state: present
+#   loop: "{{ groups['galera-cluster-nodes'] }}"
+#   when:
+#     - hostvars[item].ansible_default_ipv4.address is defined
+#     - hostvars[item].ansible_facts['hostname'] is defined
+
+- name: Add IPv4 hosts to /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars[item].internal_ip }} {{ hostvars[item].ansible_facts['hostname'] }}"
+    state: present
+  loop: "{{ groups['galera-cluster-nodes'] }}"
+  when:
+    - hostvars[item].internal_ip is defined
+    - hostvars[item].ansible_facts['hostname'] is defined
+
+- name: Add IPv4 hosts to "{{ hosts_template_file | trim }}"
+  ansible.builtin.lineinfile:
+    path: "{{ hosts_template_file | trim }}"
+    line: "{{ hostvars[item].internal_ip }} {{ hostvars[item].ansible_facts['hostname'] }}"
+    state: present
+  loop: "{{ groups['galera-cluster-nodes'] }}"
+  when:
+    - hostvars[item].internal_ip is defined
+    - hostvars[item].ansible_facts['hostname'] is defined
+
+- name: Install prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - wget
+    update_cache: true
+
+- name: Download Percona repo package
+  ansible.builtin.get_url:
+    url: "https://repo.percona.com/apt/percona-release_latest.{{ ansible_facts['lsb']['codename'] }}_all.deb"
+    dest: "/tmp/percona-release_latest.{{ ansible_facts['lsb']['codename'] }}_all.deb"
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Install Percona repo package
+  ansible.builtin.apt:
+    deb: "/tmp/percona-release_latest.{{ ansible_facts['lsb']['codename'] }}_all.deb"
+
+- name: Update apt repositories
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install PMM client
+  ansible.builtin.apt:
+    name: pmm2-client
+    state: present
+
+# - name: Configure PMM client if server and password are defined
+#   when: pmm_server != ''
+#   block:
+#     - name: Configure PMM client with server URL
+#       ansible.builtin.shell: |
+#         "pmm-admin config --server-insecure-tls --server-url=https://admin:{{ pmm_admin_password }}@{{ pmm_server }}"
+#       register: cmd_output
+#       changed_when: cmd_output.rc == 0
+
+#     - name: Add MySQL monitoring to PMM
+#       ansible.builtin.shell: |
+#         "pmm-admin add mysql --username=pmm --password={{ pmm_passwd }} --query-source=perfschema"
+#       register: cmd_output
+#       changed_when: cmd_output.rc == 0
