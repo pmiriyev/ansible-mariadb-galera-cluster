@@ -4,3 +4,9 @@
   ansible.builtin.systemd:
     daemon_reload: true
   become: true
+
+- name: Restart Keepalived
+  ansible.builtin.systemd:
+    name: keepalived
+    state: restarted
+    enabled: true

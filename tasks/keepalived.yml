@@ -1,0 +1,48 @@
+- name: Update Cache Debian
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+
+- name: Install HaProxy and Keepalived
+  ansible.builtin.apt:
+    name: keepalived
+    state: present
+
+- name: Set internal interface fact based on private IP range
+  ansible.builtin.set_fact:
+    internal_interface: "{{ item }}"
+  loop: "{{ ansible_interfaces }}"
+  when:
+    - "'ansible_' + item in hostvars[inventory_hostname]"
+    - "'ipv4' in hostvars[inventory_hostname]['ansible_' + item]"
+    - "hostvars[inventory_hostname]['ansible_' + item].ipv4.address | ipaddr(hostvars[groups['galera-cluster-nodes'][0]].internal_subnet)"
+  failed_when: ansible_interfaces | length == 0
+
+- name: Set keepalived script
+  ansible.builtin.template:
+    src: templates/check_mariadb.j2
+    dest: /etc/keepalived/check_mariadb.sh
+    mode: a+x
+
+- name: Configure Keepalived Master
+  ansible.builtin.template:
+    src: templates/keepalived-master.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: '0644'
+    owner: root
+    group: root
+  when: inventory_hostname == groups['galera-cluster-nodes'][0]
+  notify: Restart Keepalived
+
+- name: Configure Keepalived Backup
+  ansible.builtin.template:
+    src: templates/keepalived-backup.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: '0644'
+    owner: root
+    group: root
+  when: inventory_hostname in groups['galera-cluster-nodes'][1:3]
+  notify: Restart Keepalived
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

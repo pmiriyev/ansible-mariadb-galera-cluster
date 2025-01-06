@@ -365,3 +365,5 @@ cacti_db_user: "cactiuser"
 
 # Whether to output user data when managing users.
 galera_users_no_log: true
+
+auth_pass: "{{ lookup('bitwarden.secrets.lookup', 'b762c3a8-bd0e-4f1c-a6f7-b23a010a5df4') }}"

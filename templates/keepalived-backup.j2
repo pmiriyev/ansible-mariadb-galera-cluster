@@ -1,0 +1,31 @@
+global_defs {
+    router_id LVS_DEVEL
+    enable_script_security
+    script_user root
+    max_auto_priority 99
+}
+
+vrrp_script chk_mariadb {
+    script '/etc/keepalived/check_mariadb.sh'
+    interval 2
+}
+
+vrrp_instance mariadb-vip {
+   interface {{ internal_interface }}
+    state BACKUP
+    priority {{ priority }}
+    authentication {
+        auth_type PASS
+        auth_pass {{ auth_pass }}
+    }
+
+    virtual_router_id 51
+
+    virtual_ipaddress {
+        {{ hostvars[groups['galera-cluster-nodes'][0]].vip }}/24
+    }
+
+    track_script {
+        chk_mariadb
+    }
+}
