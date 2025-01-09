@@ -111,6 +111,8 @@
     - "SET GLOBAL query_response_time_stats = ON;"
     - "SET GLOBAL userstat = ON;"
   ignore_errors: true
+  delegate_to: "{{ galera_mysql_first_node }}"
+  run_once: true
 
 # - name: Configure PMM client if server and password are defined
 #   when: pmm_server != ''
