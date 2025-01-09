@@ -92,6 +92,26 @@
     name: pmm2-client
     state: present
 
+- name: Apply MariaDB session settings
+  community.mysql.mysql_query:
+    login_user: "root"
+    login_password: "{{ mariadb_mysql_root_password }}"
+    login_host: "localhost"
+    query: "{{ item }}"
+  loop:
+    - "SET GLOBAL slow_query_log = 1;"
+    - "SET GLOBAL log_output = 'FILE';"
+    - "SET GLOBAL long_query_time = 0;"
+    - "SET GLOBAL log_slow_admin_statements = 1;"
+    - "SET GLOBAL log_slow_slave_statements = 1;"
+    - "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
+    - "SET GLOBAL innodb_monitor_enable = all;"
+    - "INSTALL PLUGIN QUERY_RESPONSE_TIME_AUDIT SONAME 'query_response_time.so';"
+    - "INSTALL PLUGIN QUERY_RESPONSE_TIME SONAME 'query_response_time.so';"
+    - "SET GLOBAL query_response_time_stats = ON;"
+    - "SET GLOBAL userstat = ON;"
+  ignore_errors: true
+
 # - name: Configure PMM client if server and password are defined
 #   when: pmm_server != ''
 #   block:
@@ -103,6 +123,6 @@
 
 #     - name: Add MySQL monitoring to PMM
 #       ansible.builtin.shell: |
-#         "pmm-admin add mysql --username=pmm --password={{ pmm_passwd }} --query-source=perfschema"
+#         "pmm-admin add mysql --username=pmm --password={{ pmm_passwd }} --query-source=perfschema name {{ hostvars[groups['galera-cluster-nodes'][0]].vip }}:3306"
 #       register: cmd_output
 #       changed_when: cmd_output.rc == 0

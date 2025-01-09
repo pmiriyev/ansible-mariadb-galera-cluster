@@ -225,7 +225,7 @@ mariadb_innodb_lock_wait_timeout: "50"
 mariadb_long_query_time: "auto"
 
 # Enable logging of slow queries
-mariadb_slow_query_log_enabled: false
+mariadb_slow_query_log_enabled: true
 
 # MariaDB default: 4
 # https://mariadb.com/kb/en/innodb-system-variables/#innodb_read_io_threads
@@ -261,8 +261,8 @@ mariadb_real_cpus: "{{ ansible_processor_count * ansible_processor_cores }}"
 #     init_script: files/init_mydb.sql
 # mariadb_databases: []
 mariadb_databases:
-  - name: keystone
-  - name: mydb
+  - name: k3s
+  - name: seaweedfs
 
 # Define additional MySQL users
 # mariadb_mysql_users: []
@@ -278,26 +278,26 @@ mariadb_databases:
 #     state: present (default)
 #     append_privs: no (default)
 mariadb_mysql_users:
-  - name: keystone
+  - name: k3s_user
     hosts:
       - "%"
       - "127.0.0.1"
       - "::1"
       - "localhost"
-    password: "{{ lookup('bitwarden.secrets.lookup', 'bd866d68-15b5-40bd-98d9-b25a00fb9d45') }}"
+    password: "{{ lookup('bitwarden.secrets.lookup', '99aef64d-6050-4f1d-8abc-b23a00ff2758') }}"
     encrypted: no
-    priv: keystone.*:ALL
+    priv: k3s.*:ALL
     state: present
     append_privs: no
-  - name: myuser
+  - name: seaweedfs
     hosts:
       - "%"
       - "127.0.0.1"
       - "::1"
       - "localhost"
-    password: "{{ lookup('bitwarden.secrets.lookup', '6770396f-e9d0-4897-93b3-b25a00fbcddc') }}"
+    password: "{{ lookup('bitwarden.secrets.lookup', '1eb89958-8963-4c0e-bf3b-b247006e9cb7') }}"
     encrypted: no
-    priv: mydb.*:ALL
+    priv: seaweedfs.*:ALL
     state: present
     append_privs: no
   - name: pmm
