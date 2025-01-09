@@ -92,28 +92,6 @@
     name: pmm2-client
     state: present
 
-- name: Apply MariaDB session settings
-  community.mysql.mysql_query:
-    login_user: "root"
-    login_password: "{{ mariadb_mysql_root_password }}"
-    login_host: "localhost"
-    query: "{{ item }}"
-  loop:
-    - "SET GLOBAL slow_query_log = 1;"
-    - "SET GLOBAL log_output = 'FILE';"
-    - "SET GLOBAL long_query_time = 0;"
-    - "SET GLOBAL log_slow_admin_statements = 1;"
-    - "SET GLOBAL log_slow_slave_statements = 1;"
-    - "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
-    - "SET GLOBAL innodb_monitor_enable = all;"
-    - "INSTALL PLUGIN QUERY_RESPONSE_TIME_AUDIT SONAME 'query_response_time.so';"
-    - "INSTALL PLUGIN QUERY_RESPONSE_TIME SONAME 'query_response_time.so';"
-    - "SET GLOBAL query_response_time_stats = ON;"
-    - "SET GLOBAL userstat = ON;"
-  ignore_errors: true
-  delegate_to: "{{ galera_mysql_first_node }}"
-  run_once: true
-
 # - name: Configure PMM client if server and password are defined
 #   when: pmm_server != ''
 #   block:

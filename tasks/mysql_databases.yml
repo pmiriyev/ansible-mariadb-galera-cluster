@@ -41,3 +41,44 @@
   when:
     - item.changed
     - item.item.init_script is defined
+
+- name: Create table in seaweedfs database
+  community.mysql.mysql_query:
+    login_host: "localhost"
+    login_port: 3306
+    login_user: root
+    login_password: "{{ mariadb_mysql_root_password }}"
+    login_db: seaweedfs
+    query: |
+      CREATE TABLE IF NOT EXISTS `filemeta` (
+        `dirhash`   BIGINT NOT NULL       COMMENT 'first 64 bits of MD5 hash value of directory field',
+        `name`      VARCHAR(766) NOT NULL COMMENT 'directory or file name',
+        `directory` TEXT NOT NULL         COMMENT 'full path to parent directory',
+        `meta`      LONGBLOB,
+        PRIMARY KEY (`dirhash`, `name`)
+      ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+  ignore_errors: true
+  delegate_to: "{{ galera_mysql_first_node }}"
+  run_once: true
+
+- name: Apply MariaDB session settings
+  community.mysql.mysql_query:
+    login_user: "root"
+    login_password: "{{ mariadb_mysql_root_password }}"
+    login_host: "localhost"
+    query: "{{ item }}"
+  loop:
+    - "SET GLOBAL slow_query_log = 1;"
+    - "SET GLOBAL log_output = 'FILE';"
+    - "SET GLOBAL long_query_time = 0;"
+    - "SET GLOBAL log_slow_admin_statements = 1;"
+    - "SET GLOBAL log_slow_slave_statements = 1;"
+    - "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
+    - "SET GLOBAL innodb_monitor_enable = all;"
+    - "INSTALL PLUGIN QUERY_RESPONSE_TIME_AUDIT SONAME 'query_response_time.so';"
+    - "INSTALL PLUGIN QUERY_RESPONSE_TIME SONAME 'query_response_time.so';"
+    - "SET GLOBAL query_response_time_stats = ON;"
+    - "SET GLOBAL userstat = ON;"
+  ignore_errors: true
+  delegate_to: "{{ galera_mysql_first_node }}"
+  run_once: true
