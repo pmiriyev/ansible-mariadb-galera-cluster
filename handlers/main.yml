@@ -10,3 +10,9 @@
     name: keepalived
     state: restarted
     enabled: true
+
+- name: Restart fail2ban SVC
+  ansible.builtin.systemd:
+    name: fail2ban
+    state: restarted
+    enabled: true

@@ -5,8 +5,23 @@
 
 - name: Install HaProxy and Keepalived
   ansible.builtin.apt:
-    name: keepalived
+    name:
+      - keepalived
+      - fail2ban
     state: present
+
+- name: Copy jail.conf
+  ansible.builtin.copy:
+    src: jail.conf
+    dest: /etc/fail2ban/jail.local
+    remote_src: false
+    mode: '0644'
+    owner: root
+    group: root
+  notify: Restart fail2ban SVC
+
+- name: Flush handlers - run handlers before play finish
+  ansible.builtin.meta: flush_handlers
 
 - name: Set internal interface fact based on private IP range
   ansible.builtin.set_fact:

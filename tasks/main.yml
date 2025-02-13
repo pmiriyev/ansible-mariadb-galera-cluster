@@ -77,5 +77,5 @@
     - config_cacti_monitoring
   when: galera_enable_cacti_monitoring
 
-- ansible.builtin.import_tasks: keepalived.yml
+- ansible.builtin.import_tasks: keepalived-f2b.yml
   when: ansible_os_family == "Debian"
