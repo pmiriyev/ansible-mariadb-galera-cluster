@@ -263,6 +263,8 @@ mariadb_real_cpus: "{{ ansible_processor_count * ansible_processor_cores }}"
 mariadb_databases:
   - name: k3s
   - name: seaweedfs
+  - name: phpipam
+  - name: pdns
 
 # Define additional MySQL users
 # mariadb_mysql_users: []
@@ -298,6 +300,28 @@ mariadb_mysql_users:
     password: "{{ lookup('bitwarden.secrets.lookup', '1eb89958-8963-4c0e-bf3b-b247006e9cb7') }}"
     encrypted: no
     priv: seaweedfs.*:ALL
+    state: present
+    append_privs: no
+  - name: phpipam
+    hosts:
+      - "%"
+      - "127.0.0.1"
+      - "::1"
+      - "localhost"
+    password: "{{ lookup('bitwarden.secrets.lookup', 'bd866d68-15b5-40bd-98d9-b25a00fb9d45') }}"
+    encrypted: no
+    priv: phpipam.*:ALL
+    state: present
+    append_privs: no
+  - name: pdns_user
+    hosts:
+      - "%"
+      - "127.0.0.1"
+      - "::1"
+      - "localhost"
+    password: "{{ lookup('bitwarden.secrets.lookup', 'bd866d68-15b5-40bd-98d9-b25a00fb9d45') }}"
+    encrypted: no
+    priv: pdns.*:ALL
     state: present
     append_privs: no
   - name: pmm
